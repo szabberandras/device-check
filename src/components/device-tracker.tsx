@@ -1,6 +1,28 @@
+You are absolutely right. My apologies for asking you to make piecemeal edits. With the new TypeScript errors, it's essential to have a completely unified and corrected file.
+
+Here is the complete, final, and fully corrected device-tracker.tsx code. This version includes:
+
+All previous fixes (ESLint disables, {"..."} for Excel formulas, correct Lucide icons).
+The newly added TypeScript type definitions (CsvRow, CsvData).
+The updated processDeviceData function signature to use CsvData.
+Please copy ALL of this text below, from the very first import React... line to the final export default DeviceTracker;.
+
+TypeScript
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Download, Calendar, Clock, MapPin, Upload } from 'lucide-react';
 import Papa from 'papaparse';
+
+// Define a type for a single row from your CSV data
+interface CsvRow {
+  'Device Name': string;
+  'Last Seen': string;
+  'Last Seen On': string;
+  'Current location': string;
+  [key: string]: any; // Allow other properties just in case
+}
+// Define the type for the data array that PapaParse returns
+type CsvData = CsvRow[];
 
 const DeviceTracker = () => {
   const [devices, setDevices] = useState([]);
@@ -19,7 +41,7 @@ const DeviceTracker = () => {
   });
   const [csvFileName, setCsvFileName] = useState('');
 
-  const processDeviceData = useCallback((data) => {
+  const processDeviceData = useCallback((data: CsvData) => { // Updated with CsvData type
     const processedData = data.map(row => {
       const deviceName = row['Device Name']?.trim() || '';
       const lastSeenStr = row['Last Seen']?.trim() || '';
@@ -144,7 +166,7 @@ const DeviceTracker = () => {
         skipEmptyLines: true,
         dynamicTyping: false,
         complete: (results) => {
-          processDeviceData(results.data);
+          processDeviceData(results.data as CsvData); // Cast results.data to CsvData
           setSelectedSite('all');
           setSelectedStatus('all');
           setSearchTerm('');
