@@ -305,7 +305,7 @@ const DeviceTracker = () => {
             )}
             {selectedStatus !== 'all' && (
               <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
-                Status: {getCategoryLabel(selectedStatus)}
+                Status: {getCategoryLabel(selectedStatus as ProcessedDevice['category'])}
                 <button
                   onClick={() => setSelectedStatus('all')}
                   className="ml-1 text-green-600 hover:text-green-800"
