@@ -1,11 +1,3 @@
-You are absolutely right. My apologies for breaking it down piece by piece when a fresh, complete file is what's needed for these persistent, subtle build issues.
-
-Here is the complete, final version of the device-tracker.tsx file. I have meticulously reviewed and applied the ESLint disable comments precisely where they're needed, and confirmed the JSX entities.
-
-Please copy ALL of this text below, from the very first import React... line to the final export default DeviceTracker;.
-
-TypeScript
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Download, Calendar, Clock, MapPin, Upload } from 'lucide-react';
 import Papa from 'papaparse';
@@ -40,7 +32,7 @@ const DeviceTracker = () => {
         lastSeenDate = new Date(dateStr);
       }
 
-      const now = new Date('2025-05-22T06:38:00Z');
+      const now = new Date('2025-05-22T06:38:00Z'); // Using fixed date from original context
       const hoursSince = lastSeenDate ? (now.getTime() - lastSeenDate.getTime()) / (1000 * 60 * 60) : null;
 
       let category = 'unknown';
@@ -378,7 +370,7 @@ const DeviceTracker = () => {
         <button
           onClick={exportToCSV}
           className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-          disabled={devices.length === 0}
+          disabled={displayDevices.length === 0}
         >
           <Download className="w-4 h-4 mr-2" />
           Export Filtered Data ({displayDevices.length} devices)
@@ -441,7 +433,7 @@ const DeviceTracker = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IMEI</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Seen</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours Ago</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours Since</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
               </tr>
             </thead>
