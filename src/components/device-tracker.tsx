@@ -1,9 +1,3 @@
-Yes, absolutely! Here is the complete, updated device-tracker.tsx code with all the fixes applied, ready for you to copy and paste.
-
-Please copy all of the text below, from the very first import statement to the final export default DeviceTracker;.
-
-TypeScript
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Download, Calendar, Clock, MapPin, Upload } from 'lucide-react';
 import Papa from 'papaparse';
