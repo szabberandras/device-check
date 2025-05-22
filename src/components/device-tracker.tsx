@@ -1,3 +1,11 @@
+You got it. It's easy to lose track with so many changes!
+
+Here is the complete, final version of your device-tracker.tsx code, including all previous fixes and the new "Study" column functionality. This version is ready to be copied and pasted into your device-tracker.tsx file.
+
+Please copy ALL of this text below, from the very first import React... line to the final export default DeviceTracker;.
+
+TypeScript
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Download, Calendar, Clock, MapPin, Upload } from 'lucide-react';
 import Papa from 'papaparse';
@@ -8,6 +16,7 @@ interface DeviceDataRow {
   'Last Seen': string;
   'Last Seen On': string;
   'Current location': string;
+  'Study': string; // <--- ADDED: New Study column in incoming CSV
   [key: string]: unknown; // Allow for other columns not explicitly defined
 }
 
@@ -17,6 +26,7 @@ interface ProcessedDevice {
   lastSeenStr: string;
   lastSeenOn: string;
   location: string;
+  study: string; // <--- ADDED: Study property for processed data
   lastSeenDate: Date | null;
   hoursSince: number | null;
   category: 'under24h' | 'between24_48h' | 'between48h_5d' | 'over5d' | 'unknown';
@@ -30,7 +40,9 @@ const DeviceTracker = () => {
   const [selectedSite, setSelectedSite] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedStudy, setSelectedStudy] = useState<string>('all'); // <--- ADDED: State for selected study filter
   const [sites, setSites] = useState<string[]>([]);
+  const [studies, setStudies] = useState<string[]>([]); // <--- ADDED: State for unique studies list
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [stats, setStats] = useState({
     total: 0,
@@ -48,6 +60,7 @@ const DeviceTracker = () => {
       const lastSeenStr = row['Last Seen']?.trim() || '';
       const lastSeenOn = row['Last Seen On']?.trim() || '';
       const location = row['Current location']?.trim() || '';
+      const study = row['Study']?.trim() || ''; // <--- ADDED: Extract study value
 
       let lastSeenDate: Date | null = null;
       if (lastSeenStr) {
@@ -82,6 +95,7 @@ const DeviceTracker = () => {
         lastSeenStr,
         lastSeenOn,
         location,
+        study, // <--- ADDED: Include study in the returned object
         lastSeenDate,
         hoursSince,
         category,
@@ -93,6 +107,9 @@ const DeviceTracker = () => {
 
     const uniqueSites = [...new Set(processedData.map(d => d.location).filter(Boolean))].sort();
     setSites(uniqueSites);
+
+    const uniqueStudies = [...new Set(processedData.map(d => d.study).filter(Boolean))].sort(); // <--- ADDED: Get unique studies
+    setStudies(uniqueStudies); // <--- ADDED: Set unique studies state
 
     const newStats = {
       total: processedData.length,
@@ -115,6 +132,11 @@ const DeviceTracker = () => {
       filtered = filtered.filter(device => device.category === selectedStatus);
     }
 
+    // <--- ADDED: Filter by selected study
+    if (selectedStudy !== 'all') {
+      filtered = filtered.filter(device => device.study === selectedStudy);
+    }
+
     if (searchTerm) {
       filtered = filtered.filter(device =>
         device.deviceName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -122,7 +144,7 @@ const DeviceTracker = () => {
     }
 
     setFilteredDevices(filtered);
-  }, [devices, selectedSite, selectedStatus, searchTerm]);
+  }, [devices, selectedSite, selectedStatus, searchTerm, selectedStudy]); // <--- ADDED: selectedStudy to dependencies
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -132,7 +154,7 @@ const DeviceTracker = () => {
   const exportToCSV = () => {
     const dataToExport = filteredDevices.length > 0 ? filteredDevices : devices;
     const csvContent = [
-      ['IMEI', 'Last Seen', 'Hours Since', 'Status', 'Location'],
+      ['IMEI', 'Last Seen', 'Hours Since', 'Status', 'Location', 'Study'], // <--- ADDED: 'Study' to CSV header
       ...dataToExport.map(device => [
         device.deviceName,
         device.lastSeenStr,
@@ -141,7 +163,8 @@ const DeviceTracker = () => {
         device.category === 'between24_48h' ? 'Recent (24-48h)' :
         device.category === 'between48h_5d' ? 'Warning (2-5 days)' :
         device.category === 'over5d' ? 'Critical (> 5 days)' : 'Unknown',
-        device.location
+        device.location,
+        device.study // <--- ADDED: device.study to CSV row
       ])
     ];
 
@@ -157,8 +180,8 @@ const DeviceTracker = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => { // Explicitly type event
-    const file = event.target.files?.[0]; // Use optional chaining for files
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file) {
       setCsvFileName(file.name);
       Papa.parse(file, {
@@ -167,10 +190,11 @@ const DeviceTracker = () => {
         skipEmptyLines: true,
         dynamicTyping: false,
         complete: (results) => {
-          processDeviceData(results.data as DeviceDataRow[]); // Cast results.data to DeviceDataRow[]
+          processDeviceData(results.data as DeviceDataRow[]);
           setSelectedSite('all');
           setSelectedStatus('all');
           setSearchTerm('');
+          setSelectedStudy('all'); // <--- ADDED: Reset study filter on new upload
         },
         error: (err) => {
           console.error('Error parsing CSV:', err);
@@ -191,7 +215,7 @@ const DeviceTracker = () => {
     };
   };
 
-  const getCategoryLabel = (category: ProcessedDevice['category']) => { // Explicitly type category
+  const getCategoryLabel = (category: ProcessedDevice['category']) => {
     switch (category) {
       case 'under24h': return 'Active (< 24h)';
       case 'between24_48h': return 'Recent (24-48h)';
@@ -201,7 +225,7 @@ const DeviceTracker = () => {
     }
   };
 
-  const getCategoryIcon = (category: ProcessedDevice['category']) => { // Explicitly type category
+  const getCategoryIcon = (category: ProcessedDevice['category']) => {
     switch (category) {
       case 'under24h': return <div className="w-3 h-3 bg-green-500 rounded-full"></div>;
       case 'between24_48h': return <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>;
@@ -246,7 +270,8 @@ const DeviceTracker = () => {
       {/* Filters */}
       <div className="mb-8 p-6 bg-gray-50 rounded-lg border">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Filters</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Adjusted grid to accommodate new filter for larger screens */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"> {/* <--- MODIFIED GRID LAYOUT */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Site/Location</label>
             <select
@@ -278,6 +303,22 @@ const DeviceTracker = () => {
             </select>
           </div>
 
+          {/* NEW STUDY FILTER DROPDOWN */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Study</label>
+            <select
+              value={selectedStudy}
+              onChange={(e) => setSelectedStudy(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={devices.length === 0}
+            >
+              <option value="all">All Studies ({studies.length})</option>
+              {studies.map(study => (
+                <option key={study} value={study}>{study}</option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Search IMEI</label>
             <input
@@ -291,8 +332,9 @@ const DeviceTracker = () => {
           </div>
         </div>
 
-        {(selectedSite !== 'all' || selectedStatus !== 'all' || searchTerm) && (
-          <div className="mt-4 flex items-center space-x-2">
+        {/* Updated Active filters display */}
+        {(selectedSite !== 'all' || selectedStatus !== 'all' || searchTerm || selectedStudy) && ( {/* <--- ADDED selectedStudy to condition */}
+          <div className="mt-4 flex flex-wrap items-center space-x-2"> {/* <--- Used flex-wrap for better layout if many filters */}
             <span className="text-sm text-gray-600">Active filters:</span>
             {selectedSite !== 'all' && (
               <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
@@ -305,10 +347,19 @@ const DeviceTracker = () => {
             )}
             {selectedStatus !== 'all' && (
               <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
-                Status: {getCategoryLabel(selectedStatus as ProcessedDevice['category'])}
+                Status: {getCategoryLabel(selectedStatus as ProcessedDevice['category'])} {/* <--- Type assertion here */}
                 <button
                   onClick={() => setSelectedStatus('all')}
                   className="ml-1 text-green-600 hover:text-green-800"
+                >×</button>
+              </span>
+            )}
+            {selectedStudy !== 'all' && ( {/* <--- ADDED: Active study filter tag */}
+              <span className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">
+                Study: {selectedStudy}
+                <button
+                  onClick={() => setSelectedStudy('all')}
+                  className="ml-1 text-purple-600 hover:text-purple-800"
                 >×</button>
               </span>
             )}
@@ -326,6 +377,7 @@ const DeviceTracker = () => {
                 setSelectedSite('all');
                 setSelectedStatus('all');
                 setSearchTerm('');
+                setSelectedStudy('all'); // <--- ADDED: Clear study filter on clear all
               }}
               className="text-sm text-red-600 hover:text-red-800 underline"
             >
@@ -443,7 +495,7 @@ const DeviceTracker = () => {
             <h2 className="text-lg font-semibold text-gray-900">Device Status List</h2>
             <span className="text-sm text-gray-600">
               Showing {Math.min(displayDevices.length, 100)} of {displayDevices.length} devices
-              {(selectedSite !== 'all' || selectedStatus !== 'all' || searchTerm) &&
+              {(selectedSite !== 'all' || selectedStatus !== 'all' || searchTerm || selectedStudy) &&
                 ` (filtered from ${devices.length} total)`
               }
             </span>
@@ -458,6 +510,7 @@ const DeviceTracker = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Seen</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours Since</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Study</th> {/* <--- ADDED: Table header for Study */}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -488,6 +541,9 @@ const DeviceTracker = () => {
                       <MapPin className="w-4 h-4 text-gray-400" />
                       <span>{device.location}</span>
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"> {/* <--- ADDED: Table cell for Study */}
+                    <span>{device.study || 'N/A'}</span>
                   </td>
                 </tr>
               ))}
