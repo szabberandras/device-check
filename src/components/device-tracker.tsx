@@ -8,7 +8,7 @@ interface DeviceDataRow {
   'Last Seen': string;
   'Last Seen On': string;
   'Current location': string;
-  [key: string]: any; // Allow for other columns not explicitly defined
+  [key: string]: unknown; // Allow for other columns not explicitly defined
 }
 
 // Define the processed device object type for internal state
