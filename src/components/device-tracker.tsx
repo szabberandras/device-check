@@ -2,24 +2,35 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Download, Calendar, Clock, MapPin, Upload } from 'lucide-react';
 import Papa from 'papaparse';
 
-// Define a type for a single row from your CSV data
-interface CsvRow {
+// Define types for CSV data structure
+interface DeviceDataRow {
   'Device Name': string;
   'Last Seen': string;
   'Last Seen On': string;
   'Current location': string;
-  [key: string]: any; // Allow other properties just in case
+  [key: string]: any; // Allow for other columns not explicitly defined
 }
-// Define the type for the data array that PapaParse returns
-type CsvData = CsvRow[];
+
+// Define the processed device object type for internal state
+interface ProcessedDevice {
+  deviceName: string;
+  lastSeenStr: string;
+  lastSeenOn: string;
+  location: string;
+  lastSeenDate: Date | null;
+  hoursSince: number | null;
+  category: 'under24h' | 'between24_48h' | 'between48h_5d' | 'over5d' | 'unknown';
+  categoryColor: string;
+}
 
 const DeviceTracker = () => {
-  const [devices, setDevices] = useState([]);
-  const [filteredDevices, setFilteredDevices] = useState([]);
-  const [selectedSite, setSelectedSite] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sites, setSites] = useState([]);
+  // Explicitly type the state variables to avoid 'never[]' inference
+  const [devices, setDevices] = useState<ProcessedDevice[]>([]);
+  const [filteredDevices, setFilteredDevices] = useState<ProcessedDevice[]>([]);
+  const [selectedSite, setSelectedSite] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [sites, setSites] = useState<string[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [stats, setStats] = useState({
     total: 0,
@@ -28,16 +39,17 @@ const DeviceTracker = () => {
     between48h_5d: 0,
     over5d: 0
   });
-  const [csvFileName, setCsvFileName] = useState('');
+  const [csvFileName, setCsvFileName] = useState<string>('');
 
-  const processDeviceData = useCallback((data: CsvData) => { // Updated with CsvData type
-    const processedData = data.map(row => {
+  // Explicitly type 'data' parameter as DeviceDataRow[]
+  const processDeviceData = useCallback((data: DeviceDataRow[]) => {
+    const processedData: ProcessedDevice[] = data.map(row => {
       const deviceName = row['Device Name']?.trim() || '';
       const lastSeenStr = row['Last Seen']?.trim() || '';
       const lastSeenOn = row['Last Seen On']?.trim() || '';
       const location = row['Current location']?.trim() || '';
 
-      let lastSeenDate = null;
+      let lastSeenDate: Date | null = null;
       if (lastSeenStr) {
         const dateStr = lastSeenStr.replace(' UTC', '');
         lastSeenDate = new Date(dateStr);
@@ -46,7 +58,7 @@ const DeviceTracker = () => {
       const now = new Date('2025-05-22T06:38:00Z'); // Using fixed date from original context
       const hoursSince = lastSeenDate ? (now.getTime() - lastSeenDate.getTime()) / (1000 * 60 * 60) : null;
 
-      let category = 'unknown';
+      let category: ProcessedDevice['category'] = 'unknown';
       let categoryColor = '#f3f4f6';
 
       if (hoursSince !== null) {
@@ -145,8 +157,8 @@ const DeviceTracker = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => { // Explicitly type event
+    const file = event.target.files?.[0]; // Use optional chaining for files
     if (file) {
       setCsvFileName(file.name);
       Papa.parse(file, {
@@ -155,7 +167,7 @@ const DeviceTracker = () => {
         skipEmptyLines: true,
         dynamicTyping: false,
         complete: (results) => {
-          processDeviceData(results.data as CsvData); // Cast results.data to CsvData
+          processDeviceData(results.data as DeviceDataRow[]); // Cast results.data to DeviceDataRow[]
           setSelectedSite('all');
           setSelectedStatus('all');
           setSearchTerm('');
@@ -179,7 +191,7 @@ const DeviceTracker = () => {
     };
   };
 
-  const getCategoryLabel = (category) => {
+  const getCategoryLabel = (category: ProcessedDevice['category']) => { // Explicitly type category
     switch (category) {
       case 'under24h': return 'Active (< 24h)';
       case 'between24_48h': return 'Recent (24-48h)';
@@ -189,7 +201,7 @@ const DeviceTracker = () => {
     }
   };
 
-  const getCategoryIcon = (category) => {
+  const getCategoryIcon = (category: ProcessedDevice['category']) => { // Explicitly type category
     switch (category) {
       case 'under24h': return <div className="w-3 h-3 bg-green-500 rounded-full"></div>;
       case 'between24_48h': return <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>;
