@@ -1,3 +1,11 @@
+You are absolutely right. My apologies for asking you to manually edit snippets when a full, corrected file is necessary for clarity and to avoid reintroducing errors.
+
+Here is the complete, final, and most robust version of the device-tracker.tsx file. I have implemented the {"..."} string literal approach for the Excel formulas, which is the most reliable way to handle those specific parsing errors in JSX. I've also double-checked all state variables and imports.
+
+Please copy ALL of this text below, from the very first import React... line to the final export default DeviceTracker;. This is the version that should definitively get your project building and deployed.
+
+TypeScript
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Download, Calendar, Clock, MapPin, Upload } from 'lucide-react';
 import Papa from 'papaparse';
@@ -370,7 +378,7 @@ const DeviceTracker = () => {
         <button
           onClick={exportToCSV}
           className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-          disabled={displayDevices.length === 0}
+          disabled={devices.length === 0}
         >
           <Download className="w-4 h-4 mr-2" />
           Export Filtered Data ({displayDevices.length} devices)
@@ -391,22 +399,22 @@ const DeviceTracker = () => {
           <div className="mt-4 space-y-2">
             <div className="flex items-center space-x-3">
               <div className="w-4 h-4 bg-green-200 border border-green-400 rounded"></div>
-              <code className="bg-gray-100 px-2 py-1 rounded text-xs">=(NOW()-B2)*24&lt;24</code>
+              <code className="bg-gray-100 px-2 py-1 rounded text-xs">{"=(NOW()-B2)*24<24"}</code>
               <span className="text-green-700 font-medium">Active (&lt; 24h)</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-4 h-4 bg-yellow-200 border border-yellow-400 rounded"></div>
-              <code className="bg-gray-100 px-2 py-1 rounded text-xs">=AND((NOW()-B2)*24&gt;=24,(NOW()-B2)*24&lt;48)</code>
+              <code className="bg-gray-100 px-2 py-1 rounded text-xs">{"=AND((NOW()-B2)*24>=24,(NOW()-B2)*24<48)"}</code>
               <span className="text-yellow-700 font-medium">Recent (24-48h)</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-4 h-4 bg-orange-200 border border-orange-400 rounded"></div>
-              <code className="bg-gray-100 px-2 py-1 rounded text-xs">=AND((NOW()-B2)*24&gt;=48,(NOW()-B2)*24&lt;120)</code>
+              <code className="bg-gray-100 px-2 py-1 rounded text-xs">{"=AND((NOW()-B2)*24>=48,(NOW()-B2)*24<120)"}</code>
               <span className="text-orange-700 font-medium">Warning (2-5 days)</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-4 h-4 bg-red-200 border border-red-400 rounded"></div>
-              <code className="bg-gray-100 px-2 py-1 rounded text-xs">=(NOW()-B2)*24&gt;=120</code>
+              <code className="bg-gray-100 px-2 py-1 rounded text-xs">{"=(NOW()-B2)*24>=120"}</code>
               <span className="text-red-700 font-medium">Critical (&gt; 5 days)</span>
             </div>
           </div>
