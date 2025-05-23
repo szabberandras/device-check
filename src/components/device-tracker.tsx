@@ -1,11 +1,3 @@
-You got it. It's easy to lose track with so many changes!
-
-Here is the complete, final version of your device-tracker.tsx code, including all previous fixes and the new "Study" column functionality. This version is ready to be copied and pasted into your device-tracker.tsx file.
-
-Please copy ALL of this text below, from the very first import React... line to the final export default DeviceTracker;.
-
-TypeScript
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Download, Calendar, Clock, MapPin, Upload } from 'lucide-react';
 import Papa from 'papaparse';
@@ -333,8 +325,8 @@ const DeviceTracker = () => {
         </div>
 
         {/* Updated Active filters display */}
-        {(selectedSite !== 'all' || selectedStatus !== 'all' || searchTerm || selectedStudy) && ( {/* <--- ADDED selectedStudy to condition */}
-          <div className="mt-4 flex flex-wrap items-center space-x-2"> {/* <--- Used flex-wrap for better layout if many filters */}
+        {(selectedSite !== 'all' || selectedStatus !== 'all' || searchTerm || selectedStudy) && (
+          <div className="mt-4 flex flex-wrap items-center space-x-2">
             <span className="text-sm text-gray-600">Active filters:</span>
             {selectedSite !== 'all' && (
               <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
@@ -347,14 +339,14 @@ const DeviceTracker = () => {
             )}
             {selectedStatus !== 'all' && (
               <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
-                Status: {getCategoryLabel(selectedStatus as ProcessedDevice['category'])} {/* <--- Type assertion here */}
+                Status: {getCategoryLabel(selectedStatus as ProcessedDevice['category'])}
                 <button
                   onClick={() => setSelectedStatus('all')}
                   className="ml-1 text-green-600 hover:text-green-800"
                 >×</button>
               </span>
             )}
-            {selectedStudy !== 'all' && ( {/* <--- ADDED: Active study filter tag */}
+            {selectedStudy !== 'all' && (
               <span className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">
                 Study: {selectedStudy}
                 <button
@@ -377,7 +369,7 @@ const DeviceTracker = () => {
                 setSelectedSite('all');
                 setSelectedStatus('all');
                 setSearchTerm('');
-                setSelectedStudy('all'); // <--- ADDED: Clear study filter on clear all
+                setSelectedStudy('all');
               }}
               className="text-sm text-red-600 hover:text-red-800 underline"
             >
