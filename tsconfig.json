@@ -12,12 +12,22 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-     "./types"
     "incremental": true,
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.mjs",
+    "**/*.js",
+    "**/*.jsx",
+    "./types",  // <--- Ensure this has a comma after it
+    "**/*.d.ts" // <--- Add this line to explicitly include all declaration files
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
