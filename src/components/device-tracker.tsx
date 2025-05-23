@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react'; // <--- ADDED useRef
 import { Download, Calendar, Clock, MapPin, Upload } from 'lucide-react';
 import Papa from 'papaparse';
+import html2pdf from 'html2pdf.js'; // <--- ADDED html2pdf
 
 // Define types for CSV data structure
 interface DeviceDataRow {
@@ -44,6 +45,8 @@ const DeviceTracker = () => {
     over5d: 0
   });
   const [csvFileName, setCsvFileName] = useState<string>('');
+
+  const statsCardsRef = useRef<HTMLDivElement>(null); // <--- ADDED: Ref for KPI section
 
   // Explicitly type 'data' parameter as DeviceDataRow[]
   const processDeviceData = useCallback((data: DeviceDataRow[]) => {
@@ -170,6 +173,23 @@ const DeviceTracker = () => {
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+  };
+
+  const exportKpiToPDF = () => { // <--- ADDED: PDF Export Function
+    if (statsCardsRef.current) {
+      const element = statsCardsRef.current;
+      const opt = {
+        margin:       10,
+        filename:     'device_kpi_report.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save();
+    } else {
+      console.error("Statistics cards element not found for PDF export.");
+    }
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -380,7 +400,7 @@ const DeviceTracker = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+      <div ref={statsCardsRef} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8"> {/* <--- ADDED ref={statsCardsRef} */}
         <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
           <div className="flex items-center justify-between">
             <div>
@@ -432,8 +452,8 @@ const DeviceTracker = () => {
         </div>
       </div>
 
-      {/* Export Button */}
-      <div className="mb-6">
+      {/* Export Buttons */}
+      <div className="mb-6 flex space-x-4"> {/* <--- MODIFIED: Added flex and space-x-4 to group buttons */}
         <button
           onClick={exportToCSV}
           className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
@@ -441,6 +461,16 @@ const DeviceTracker = () => {
         >
           <Download className="w-4 h-4 mr-2" />
           Export Filtered Data ({displayDevices.length} devices)
+        </button>
+
+        {/* <--- ADDED: PDF Export Button */}
+        <button
+          onClick={exportKpiToPDF}
+          className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors"
+          disabled={devices.length === 0}
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Export KPI to PDF
         </button>
       </div>
 
