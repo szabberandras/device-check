@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'; // <--- ADDED useRef
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Download, Calendar, Clock, MapPin, Upload } from 'lucide-react';
 import Papa from 'papaparse';
-import html2pdf from 'html2pdf.js'; // <--- ADDED html2pdf
 
 // Define types for CSV data structure
 interface DeviceDataRow {
@@ -9,7 +8,7 @@ interface DeviceDataRow {
   'Last Seen': string;
   'Last Seen On': string;
   'Current location': string;
-  'Study': string; // <--- ADDED: New Study column in incoming CSV
+  'Study': string;
   [key: string]: unknown; // Allow for other columns not explicitly defined
 }
 
@@ -19,7 +18,7 @@ interface ProcessedDevice {
   lastSeenStr: string;
   lastSeenOn: string;
   location: string;
-  study: string; // <--- ADDED: Study property for processed data
+  study: string;
   lastSeenDate: Date | null;
   hoursSince: number | null;
   category: 'under24h' | 'between24_48h' | 'between48h_5d' | 'over5d' | 'unknown';
@@ -33,9 +32,9 @@ const DeviceTracker = () => {
   const [selectedSite, setSelectedSite] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [selectedStudy, setSelectedStudy] = useState<string>('all'); // <--- ADDED: State for selected study filter
+  const [selectedStudy, setSelectedStudy] = useState<string>('all');
   const [sites, setSites] = useState<string[]>([]);
-  const [studies, setStudies] = useState<string[]>([]); // <--- ADDED: State for unique studies list
+  const [studies, setStudies] = useState<string[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [stats, setStats] = useState({
     total: 0,
@@ -46,7 +45,7 @@ const DeviceTracker = () => {
   });
   const [csvFileName, setCsvFileName] = useState<string>('');
 
-  const statsCardsRef = useRef<HTMLDivElement>(null); // <--- ADDED: Ref for KPI section
+  const statsCardsRef = useRef<HTMLDivElement>(null); // Ref for KPI section for PDF export
 
   // Explicitly type 'data' parameter as DeviceDataRow[]
   const processDeviceData = useCallback((data: DeviceDataRow[]) => {
@@ -55,7 +54,7 @@ const DeviceTracker = () => {
       const lastSeenStr = row['Last Seen']?.trim() || '';
       const lastSeenOn = row['Last Seen On']?.trim() || '';
       const location = row['Current location']?.trim() || '';
-      const study = row['Study']?.trim() || ''; // <--- ADDED: Extract study value
+      const study = row['Study']?.trim() || '';
 
       let lastSeenDate: Date | null = null;
       if (lastSeenStr) {
@@ -90,7 +89,7 @@ const DeviceTracker = () => {
         lastSeenStr,
         lastSeenOn,
         location,
-        study, // <--- ADDED: Include study in the returned object
+        study,
         lastSeenDate,
         hoursSince,
         category,
@@ -103,8 +102,8 @@ const DeviceTracker = () => {
     const uniqueSites = [...new Set(processedData.map(d => d.location).filter(Boolean))].sort();
     setSites(uniqueSites);
 
-    const uniqueStudies = [...new Set(processedData.map(d => d.study).filter(Boolean))].sort(); // <--- ADDED: Get unique studies
-    setStudies(uniqueStudies); // <--- ADDED: Set unique studies state
+    const uniqueStudies = [...new Set(processedData.map(d => d.study).filter(Boolean))].sort();
+    setStudies(uniqueStudies);
 
     const newStats = {
       total: processedData.length,
@@ -127,7 +126,6 @@ const DeviceTracker = () => {
       filtered = filtered.filter(device => device.category === selectedStatus);
     }
 
-    // <--- ADDED: Filter by selected study
     if (selectedStudy !== 'all') {
       filtered = filtered.filter(device => device.study === selectedStudy);
     }
@@ -139,7 +137,7 @@ const DeviceTracker = () => {
     }
 
     setFilteredDevices(filtered);
-  }, [devices, selectedSite, selectedStatus, searchTerm, selectedStudy]); // <--- ADDED: selectedStudy to dependencies
+  }, [devices, selectedSite, selectedStatus, searchTerm, selectedStudy]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -149,7 +147,7 @@ const DeviceTracker = () => {
   const exportToCSV = () => {
     const dataToExport = filteredDevices.length > 0 ? filteredDevices : devices;
     const csvContent = [
-      ['IMEI', 'Last Seen', 'Hours Since', 'Status', 'Location', 'Study'], // <--- ADDED: 'Study' to CSV header
+      ['IMEI', 'Last Seen', 'Hours Since', 'Status', 'Location', 'Study'],
       ...dataToExport.map(device => [
         device.deviceName,
         device.lastSeenStr,
@@ -159,7 +157,7 @@ const DeviceTracker = () => {
         device.category === 'between48h_5d' ? 'Warning (2-5 days)' :
         device.category === 'over5d' ? 'Critical (> 5 days)' : 'Unknown',
         device.location,
-        device.study // <--- ADDED: device.study to CSV row
+        device.study
       ])
     ];
 
@@ -175,8 +173,11 @@ const DeviceTracker = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  const exportKpiToPDF = () => { // <--- ADDED: PDF Export Function
+  const exportKpiToPDF = async () => { // <--- MODIFIED: Added async
     if (statsCardsRef.current) {
+      // Dynamically import html2pdf.js only on the client-side
+      const html2pdf = (await import('html2pdf.js')).default; // <--- MODIFIED: Dynamic import
+
       const element = statsCardsRef.current;
       const opt = {
         margin:       10,
@@ -206,7 +207,7 @@ const DeviceTracker = () => {
           setSelectedSite('all');
           setSelectedStatus('all');
           setSearchTerm('');
-          setSelectedStudy('all'); // <--- ADDED: Reset study filter on new upload
+          setSelectedStudy('all');
         },
         error: (err) => {
           console.error('Error parsing CSV:', err);
@@ -283,7 +284,7 @@ const DeviceTracker = () => {
       <div className="mb-8 p-6 bg-gray-50 rounded-lg border">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Filters</h2>
         {/* Adjusted grid to accommodate new filter for larger screens */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"> {/* <--- MODIFIED GRID LAYOUT */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Site/Location</label>
             <select
@@ -400,7 +401,7 @@ const DeviceTracker = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div ref={statsCardsRef} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8"> {/* <--- ADDED ref={statsCardsRef} */}
+      <div ref={statsCardsRef} className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
         <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
           <div className="flex items-center justify-between">
             <div>
@@ -453,7 +454,7 @@ const DeviceTracker = () => {
       </div>
 
       {/* Export Buttons */}
-      <div className="mb-6 flex space-x-4"> {/* <--- MODIFIED: Added flex and space-x-4 to group buttons */}
+      <div className="mb-6 flex space-x-4">
         <button
           onClick={exportToCSV}
           className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
@@ -463,7 +464,7 @@ const DeviceTracker = () => {
           Export Filtered Data ({displayDevices.length} devices)
         </button>
 
-        {/* <--- ADDED: PDF Export Button */}
+        {/* PDF Export Button */}
         <button
           onClick={exportKpiToPDF}
           className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors"
